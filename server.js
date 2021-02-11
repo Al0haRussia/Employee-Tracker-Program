@@ -15,7 +15,6 @@ connection.connect((err) => {
   runEmployeeProgram();
 });
 
-
 const runEmployeeProgram = () => {
     inquirer.prompt({
         type: 'list',
@@ -23,12 +22,19 @@ const runEmployeeProgram = () => {
         choices: [
             'View Departments',
             'Add Department',
+            new inquirer.Separator(),
             'View Roles',
             'Add Role',
+            new inquirer.Separator(),
             'View Employees',
+            'View Employees By Manager',
             'Add Employee',
+            new inquirer.Separator(),
             'Update Employee Role',
-            'Exit Program'
+            'Update Employee Managers',
+            new inquirer.Separator(),
+            'Exit Program',
+            new inquirer.Separator(),
         ],
         name: 'menu'
     }).then((answer) => {
@@ -44,27 +50,38 @@ const runEmployeeProgram = () => {
                 break;
             
             case 'View Roles':
-                //run view roles func
+                //run view roles function
                 viewRoles();
                 break;
 
             case 'Add Role':
-                //run add role func
+                //run add role function
                 addRole();
                 break;
 
             case 'View Employees':
-                //run view employee func
+                //run view employee function
                 viewEmployee();
+                break;
+
+            case 'View Employees By Manager':
+                // run view employees by manager function
+                viewEmployeesManager();
                 break;
             
             case 'Add Employee':
-                //run add employee func
+                //run add employee function
                 addEmployee();
                 break;
                 
             case 'Update Employee Role':
-                //run update employee role func
+                //run update employee role function
+                updateEmployeeRole();
+                break;
+
+            case 'Update Employee Managers':
+                // run update employee managers
+                updateEmployeeManager();
                 break;
 
             case 'Exit Program':
@@ -177,6 +194,30 @@ const viewEmployee = () => {
     });
 };
 
+const viewEmployeesManager = () => {
+    inquirer.prompt([{
+        type: 'number',
+        message: 'What is the Manager\'s ID?',
+        name: 'mangrid'
+    }]).then((answer) => {
+        const query = `SELECT id, first_name, last_name, role_id FROM employee WHERE ${answer.mangrid} = manager_id`
+        connection.query(query, (err, res) => {
+            if (err) throw err;
+            res.forEach(({ id, first_name, last_name, role_id}) => {
+                console.table([
+                    {
+                    ID: id,
+                    First_Name: first_name,
+                    Last_Name: last_name,
+                    Role_ID: role_id
+                    }
+                ]);
+            });
+            runEmployeeProgram();
+        });
+    });
+}
+
 const addEmployee = () => {
     inquirer.prompt([{
         type: 'input',
@@ -203,6 +244,53 @@ const addEmployee = () => {
                 Employee_Last_Name: answer.lastname,
                 Employee_Role_ID: answer.roleid,
                 Employee_Manager_ID: answer.mangrid
+            }]);
+            runEmployeeProgram();
+        });
+    });
+};
+
+
+const updateEmployeeRole = () => {
+    inquirer.prompt([{
+        type: 'number',
+        message: 'What is the employee\'s ID you wish to update?',
+        name: 'upID'
+    } , {
+        type: 'number',
+        message: 'Which role do you wish to change to? (Please insert the ID number relating to the role)',
+        name: 'uproleid'
+    }]).then((answer) => {
+        const query = `UPDATE employee SET role_id = ${answer.uproleid} WHERE id = ${answer.upID} AND first_name = "${answer.upfirstname}" AND last_name = "${answer.uplastname}"`;
+        connection.query(query, (err, res) => {
+            if (err) throw err;
+            console.table('You have entered:', [{
+                Employe_ID: answer.upID,
+                Employee_First_Name: answer.upfirstname,
+                Employee_Last_Name: answer.uplastname,
+                Employee_Role_ID: answer.uproleid
+            }]);
+            runEmployeeProgram();
+        });
+    });
+};
+
+const updateEmployeeManager = () => {
+    inquirer.prompt([{
+        type: 'number',
+        message: 'What is the employee\'s ID you wish to update?',
+        name: 'upID'
+    } , {
+        type: 'number',
+        message: 'Which Manager do you wish to change to? (Please input the number related to the Manager\'s ID number)',
+        name: 'upmangrid'
+    }]).then((answer) => {
+        const query = `UPDATE employee SET manager_id = ${answer.upmangrid} WHERE id = ${answer.upID}`;
+        connection.query(query, (err, res) => {
+            if (err) throw err;
+            console.table('You have entered:', [{
+                Employe_ID: answer.upID,
+                Employee_Role_ID: answer.upmangrid
             }]);
             runEmployeeProgram();
         });
